@@ -424,7 +424,7 @@ const Catalog: React.FC = () => {
           <div className="bg-white rounded-2xl p-8 shadow-xl">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">Tableau de Bord Admin</h1>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-red-500 to-yellow-500 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <Book className="w-10 h-10" />
                   <div>
@@ -433,7 +433,7 @@ const Catalog: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <Users className="w-10 h-10" />
                   <div>
@@ -451,7 +451,7 @@ const Catalog: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <CheckCircle className="w-10 h-10" />
                   <div>
@@ -460,7 +460,7 @@ const Catalog: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <AlertTriangle className="w-10 h-10" />
                   <div>
@@ -480,7 +480,7 @@ const Catalog: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900">Gestion des Livres</h2>
               <button
                 onClick={() => setIsBookModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full hover:from-green-600 hover:to-blue-600 transition-all transform hover:scale-105 font-semibold shadow-lg"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-yellow-500 text-white rounded-full hover:from-red-600 hover:to-yellow-600 transition-all transform hover:scale-105 font-semibold shadow-lg"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Ajouter un Livre
@@ -494,7 +494,7 @@ const Catalog: React.FC = () => {
                   placeholder="Rechercher par titre, auteur ou genre..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+                  className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -502,7 +502,7 @@ const Catalog: React.FC = () => {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+                  className="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -544,26 +544,17 @@ const Catalog: React.FC = () => {
                     </div>
                     <div className="flex space-x-2">
                       <button
-                        className={`flex-1 px-4 py-2 rounded-full text-white font-semibold transition-all transform hover:scale-105 ${
-                          book.available
-                            ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
-                            : "bg-gray-400 cursor-not-allowed"
-                        }`}
-                        disabled={!book.available}
-                      >
-                        {book.available ? "Emprunter" : "Indisponible"}
-                      </button>
-                      <button
                         onClick={() => openEditBook(book)}
-                        className="px-4 py-2 text-blue-500 hover:text-blue-600"
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all transform hover:scale-105 font-semibold"
                       >
-                        <Edit className="w-5 h-5" />
+                        <Edit className="w-4 h-4 mr-2 inline" />
+                        Modifier
                       </button>
                       <button
                         onClick={() => deleteBook(book.book_id)}
-                        className="px-4 py-2 text-red-500 hover:text-red-600"
+                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 font-semibold"
                       >
-                        <Trash className="w-5 h-5" />
+                        <Trash className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="mt-2">
@@ -625,7 +616,7 @@ const Catalog: React.FC = () => {
                   type="text"
                   value={bookForm.title || ""}
                   onChange={(e) => setBookForm({ ...bookForm, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 {formErrors.title && <p className="text-sm text-red-500">{formErrors.title}</p>}
               </div>
@@ -635,7 +626,7 @@ const Catalog: React.FC = () => {
                   type="text"
                   value={bookForm.author || ""}
                   onChange={(e) => setBookForm({ ...bookForm, author: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 {formErrors.author && <p className="text-sm text-red-500">{formErrors.author}</p>}
               </div>
@@ -645,7 +636,7 @@ const Catalog: React.FC = () => {
                   type="text"
                   value={bookForm.category || ""}
                   onChange={(e) => setBookForm({ ...bookForm, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 {formErrors.category && <p className="text-sm text-red-500">{formErrors.category}</p>}
               </div>
@@ -658,7 +649,7 @@ const Catalog: React.FC = () => {
                   max="5"
                   value={bookForm.rating || 0}
                   onChange={(e) => setBookForm({ ...bookForm, rating: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 {formErrors.rating && <p className="text-sm text-red-500">{formErrors.rating}</p>}
               </div>
@@ -667,7 +658,7 @@ const Catalog: React.FC = () => {
                 <select
                   value={bookForm.available ? "true" : "false"}
                   onChange={(e) => setBookForm({ ...bookForm, available: e.target.value === "true" })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="true">Oui</option>
                   <option value="false">Non</option>
@@ -694,7 +685,7 @@ const Catalog: React.FC = () => {
                 <select
                   value={bookForm.cover || bookIcons[0]}
                   onChange={e => setBookForm({ ...bookForm, cover: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {bookIcons.map((icon, idx) => (
                     <option key={idx} value={icon}>

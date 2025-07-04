@@ -48,7 +48,7 @@ exports.addLivre = [verifyToken, async (req, res) => {
   const coverUrl = cover || DEFAULT_COVER;
   try {
     const [result] = await db.query(
-      'INSERT INTO Livres (title, author, category, rating, total_copies, available_copies, cover) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO Livres (title, author, category, rating, total_copies, available_copies, cover, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
       [title, author, category, rating, total, available, coverUrl]
     );
     const [newLivre] = await db.query('SELECT * FROM Livres WHERE book_id = ?', [result.insertId]);

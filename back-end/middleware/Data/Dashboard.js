@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
       WHERE e.user_id = ? AND e.date_retour IS NULL
     `, [userId]);
 
-    // Récupérer les 10 derniers événements (emprunts et retours)
+    // Récupérer les 10 derniers événements (emprunts, retours et ajouts de livres)
     const [historyRows] = await db.query(`
       SELECT 
         l.book_id AS id, 
@@ -52,6 +52,20 @@ module.exports = async (req, res) => {
       FROM Returns r
       JOIN Livres l ON r.book_id = l.book_id
       WHERE r.user_id = ?
+      
+      UNION ALL
+      
+      SELECT 
+        l.book_id AS id, 
+        l.title, 
+        l.author, 
+        NULL AS ratingGiven, 
+        NULL AS borrowDate, 
+        NULL AS returnDate,
+        'ajout' AS event_type,
+        l.created_at AS event_date
+      FROM Livres l
+      WHERE l.created_at IS NOT NULL
       
       ORDER BY event_date DESC
       LIMIT 10

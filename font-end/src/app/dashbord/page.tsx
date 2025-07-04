@@ -24,7 +24,7 @@ interface BorrowingHistory {
   borrowDate: string;
   returnDate: string;
   ratingGiven: number;
-  event_type: 'emprunt' | 'retour';
+  event_type: 'emprunt' | 'retour' | 'ajout';
   event_date: string;
 }
 
@@ -430,9 +430,13 @@ const Dashboard: React.FC = () => {
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               book.event_type === 'emprunt' 
                                 ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
+                                : book.event_type === 'retour'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-blue-100 text-blue-800'
                             }`}>
-                              {book.event_type === 'emprunt' ? '📚 Emprunt' : '📖 Retour'}
+                              {book.event_type === 'emprunt' ? '📚 Emprunt' : 
+                               book.event_type === 'retour' ? '📖 Retour' : 
+                               '📝 Ajout'}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">{book.title}</td>
