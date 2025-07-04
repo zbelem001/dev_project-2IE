@@ -22,14 +22,40 @@ module.exports = async (req, res) => {
       WHERE e.user_id = ? AND e.date_retour IS NULL
     `, [userId]);
 
-    // Récupérer l'historique des emprunts
+    // Récupérer les 10 derniers événements (emprunts et retours)
     const [historyRows] = await db.query(`
-      SELECT l.book_id AS id, l.title, l.author, l.rating AS ratingGiven, e.borrow_date AS borrowDate, e.date_retour AS returnDate
+      SELECT 
+        l.book_id AS id, 
+        l.title, 
+        l.author, 
+        r.rating_given AS ratingGiven, 
+        e.borrow_date AS borrowDate, 
+        r.return_date AS returnDate,
+        'emprunt' AS event_type,
+        e.borrow_date AS event_date
       FROM Emprunts e
       JOIN Livres l ON e.book_id = l.book_id
+      LEFT JOIN Returns r ON e.user_id = r.user_id AND e.book_id = r.book_id AND e.borrow_date = r.borrow_date
       WHERE e.user_id = ?
-      ORDER BY e.borrow_date DESC
-    `, [userId]);
+      
+      UNION ALL
+      
+      SELECT 
+        l.book_id AS id, 
+        l.title, 
+        l.author, 
+        r.rating_given AS ratingGiven, 
+        r.borrow_date AS borrowDate, 
+        r.return_date AS returnDate,
+        'retour' AS event_type,
+        r.return_date AS event_date
+      FROM Returns r
+      JOIN Livres l ON r.book_id = l.book_id
+      WHERE r.user_id = ?
+      
+      ORDER BY event_date DESC
+      LIMIT 10
+    `, [userId, userId]);
 
     const dashboardData = {
       Error: false,

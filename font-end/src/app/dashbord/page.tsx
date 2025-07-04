@@ -24,6 +24,8 @@ interface BorrowingHistory {
   borrowDate: string;
   returnDate: string;
   ratingGiven: number;
+  event_type: 'emprunt' | 'retour';
+  event_date: string;
 }
 
 interface DashboardUser {
@@ -402,7 +404,7 @@ const Dashboard: React.FC = () => {
 
           {/* Borrowing History */}
           <section>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Historique des Emprunts</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">10 Derniers Événements</h2>
             {dashboardData.borrowingHistory.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
                 <p className="text-gray-600 text-lg">Aucun historique d&apos;emprunt disponible.</p>
@@ -413,6 +415,7 @@ const Dashboard: React.FC = () => {
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Événement</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Titre</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Auteur</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date d'emprunt</th>
@@ -421,18 +424,31 @@ const Dashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {dashboardData.borrowingHistory.map((book) => (
-                        <tr key={book.id} className="hover:bg-gray-50">
+                      {dashboardData.borrowingHistory.map((book, index) => (
+                        <tr key={`${book.id}-${index}`} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 text-sm">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              book.event_type === 'emprunt' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {book.event_type === 'emprunt' ? '📚 Emprunt' : '📖 Retour'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-900">{book.title}</td>
                           <td className="px-6 py-4 text-sm text-gray-600">{book.author}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.borrowDate)}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.returnDate)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {book.borrowDate ? formatDate(book.borrowDate) : '-'}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {book.returnDate ? formatDate(book.returnDate) : '-'}
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             <div className="flex items-center">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${i < book.ratingGiven ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                  className={`w-4 h-4 ${i < (book.ratingGiven || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                                 />
                               ))}
                             </div>
