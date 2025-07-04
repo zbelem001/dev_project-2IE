@@ -54,6 +54,10 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const [prolongBookId, setProlongBookId] = useState<number | null>(null);
+  const [prolongDate, setProlongDate] = useState<string>("");
+  const [prolongMessage, setProlongMessage] = useState<string>("");
+  const [prolongLoading, setProlongLoading] = useState<boolean>(false);
 
   // Fonction stable pour récupérer les données du dashboard
   const fetchDashboardData = useCallback(async () => {
@@ -145,6 +149,39 @@ const Dashboard: React.FC = () => {
     logout();
     setIsProfileMenuOpen(false);
     router.push('/');
+  };
+
+  // Fonction pour gérer la prolongation
+  const handleProlong = async (bookId: number) => {
+    if (!prolongDate) {
+      setProlongMessage("Veuillez choisir une nouvelle date de retour.");
+      return;
+    }
+    setProlongLoading(true);
+    setProlongMessage("");
+    try {
+      const response = await fetch("http://localhost:4400/api/prolonger", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ book_id: bookId, new_due_date: prolongDate }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setProlongMessage("Prolongation réussie !");
+        setProlongBookId(null);
+        setProlongDate("");
+        await fetchDashboardData();
+      } else {
+        setProlongMessage(data.error || "Erreur lors de la prolongation.");
+      }
+    } catch {
+      setProlongMessage("Erreur de connexion au serveur.");
+    } finally {
+      setProlongLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -329,9 +366,56 @@ const Dashboard: React.FC = () => {
                         <span className="text-sm font-medium">À rendre avant le {formatDate(book.dueDate)}</span>
                       </div>
                     )}
-                    <button className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full hover:from-green-600 hover:to-blue-600 transition-all transform hover:scale-105 font-semibold">
+                    <button
+                      className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full hover:from-green-600 hover:to-blue-600 transition-all transform hover:scale-105 font-semibold mb-2"
+                      onClick={() => {
+                        setProlongBookId(book.id);
+                        setProlongDate("");
+                        setProlongMessage("");
+                      }}
+                      disabled={prolongLoading}
+                    >
                       Prolonger
                     </button>
+                    {/* Afficher le calendrier si ce livre est sélectionné */}
+                    {prolongBookId === book.id && (
+                      <div className="mt-2 flex flex-col items-center">
+                        <input
+                          type="date"
+                          className="border rounded px-2 py-1 mb-2"
+                          min={(() => {
+                            // min = date actuelle + 1 jour ou dueDate + 1 jour
+                            const ref = book.dueDate ? new Date(book.dueDate) : new Date();
+                            ref.setDate(ref.getDate() + 1);
+                            return ref.toISOString().split('T')[0];
+                          })()}
+                          max={(() => {
+                            // max = aujourd'hui + 30 jours
+                            const ref = new Date();
+                            ref.setDate(ref.getDate() + 30);
+                            return ref.toISOString().split('T')[0];
+                          })()}
+                          value={prolongDate}
+                          onChange={e => setProlongDate(e.target.value)}
+                        />
+                        <button
+                          className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 mb-1"
+                          onClick={() => handleProlong(book.id)}
+                          disabled={prolongLoading || !prolongDate}
+                        >
+                          Valider la prolongation
+                        </button>
+                        <button
+                          className="px-2 py-1 text-sm text-gray-500 hover:text-red-500"
+                          onClick={() => { setProlongBookId(null); setProlongDate(""); setProlongMessage(""); }}
+                        >
+                          Annuler
+                        </button>
+                        {prolongMessage && (
+                          <div className="mt-1 text-sm text-center text-red-600">{prolongMessage}</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
