@@ -382,15 +382,14 @@ const Dashboard: React.FC = () => {
                       <div className="mt-2 flex flex-col items-center">
                         <input
                           type="date"
-                          className="border rounded px-2 py-1 mb-2"
+                          className="border rounded px-2 py-1 mb-2 text-black"
+                          style={{ color: 'black' }}
                           min={(() => {
-                            // min = date actuelle + 1 jour ou dueDate + 1 jour
                             const ref = book.dueDate ? new Date(book.dueDate) : new Date();
                             ref.setDate(ref.getDate() + 1);
                             return ref.toISOString().split('T')[0];
                           })()}
                           max={(() => {
-                            // max = aujourd'hui + 30 jours
                             const ref = new Date();
                             ref.setDate(ref.getDate() + 30);
                             return ref.toISOString().split('T')[0];
