@@ -54,8 +54,7 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const [returnLoading, setReturnLoading] = useState<boolean>(false);
-  const [returnMessage, setReturnMessage] = useState<string>("");
+  const [returnStates, setReturnStates] = useState<{[key: number]: {loading: boolean, message: string}}>({});
 
   // Fonction stable pour récupérer les données du dashboard
   const fetchDashboardData = useCallback(async () => {
@@ -151,8 +150,12 @@ const Dashboard: React.FC = () => {
 
   // Fonction pour gérer le retour d'un livre
   const handleReturn = async (bookId: number) => {
-    setReturnLoading(true);
-    setReturnMessage("");
+    // Initialiser l'état pour ce livre spécifique
+    setReturnStates(prev => ({
+      ...prev,
+      [bookId]: { loading: true, message: "" }
+    }));
+
     try {
       const response = await fetch("http://localhost:4400/api/rendre", {
         method: "POST",
@@ -163,16 +166,33 @@ const Dashboard: React.FC = () => {
         body: JSON.stringify({ book_id: bookId }),
       });
       const data = await response.json();
+      
       if (response.ok && data.success) {
-        setReturnMessage("Livre rendu avec succès !");
-        await fetchDashboardData();
+        setReturnStates(prev => ({
+          ...prev,
+          [bookId]: { loading: false, message: "Livre rendu avec succès !" }
+        }));
+        // Rafraîchir les données après un délai pour laisser le temps de voir le message
+        setTimeout(() => {
+          fetchDashboardData();
+          // Nettoyer le message après le rafraîchissement
+          setReturnStates(prev => {
+            const newState = { ...prev };
+            delete newState[bookId];
+            return newState;
+          });
+        }, 2000);
       } else {
-        setReturnMessage(data.error || "Erreur lors du retour du livre.");
+        setReturnStates(prev => ({
+          ...prev,
+          [bookId]: { loading: false, message: data.error || "Erreur lors du retour du livre." }
+        }));
       }
     } catch {
-      setReturnMessage("Erreur de connexion au serveur.");
-    } finally {
-      setReturnLoading(false);
+      setReturnStates(prev => ({
+        ...prev,
+        [bookId]: { loading: false, message: "Erreur de connexion au serveur." }
+      }));
     }
   };
 
@@ -361,12 +381,18 @@ const Dashboard: React.FC = () => {
                     <button
                       className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 font-semibold mb-2"
                       onClick={() => handleReturn(book.id)}
-                      disabled={returnLoading}
+                      disabled={returnStates[book.id]?.loading || false}
                     >
-                      Rendre
+                      {returnStates[book.id]?.loading ? "Rendu en cours..." : "Rendre"}
                     </button>
-                    {returnMessage && (
-                      <div className="mt-1 text-sm text-center text-red-600">{returnMessage}</div>
+                    {returnStates[book.id]?.message && (
+                      <div className={`mt-1 text-sm text-center ${
+                        returnStates[book.id]?.message.includes("succès") 
+                          ? "text-green-600" 
+                          : "text-red-600"
+                      }`}>
+                        {returnStates[book.id]?.message}
+                      </div>
                     )}
                   </div>
                 ))}
