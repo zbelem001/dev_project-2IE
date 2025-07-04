@@ -530,10 +530,12 @@ const Catalog: React.FC = () => {
                     key={book.book_id}
                     className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all border border-gray-100"
                   >
-                    <div
-                      className={`h-32 bg-${book.cover} rounded-lg flex items-center justify-center mb-4`}
-                    >
-                      <Book className="w-12 h-12 text-white opacity-70" />
+                    <div className="h-32 flex items-center justify-center mb-4">
+                      <img 
+                        src={book.cover || "https://cdn-icons-png.flaticon.com/512/29/29302.png"} 
+                        alt="Icône livre" 
+                        className="w-16 h-16 object-contain"
+                      />
                     </div>
                     <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{book.title}</h3>
                     <p className="text-gray-600 mb-2 font-medium">{book.author}</p>
