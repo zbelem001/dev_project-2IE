@@ -38,6 +38,7 @@ const Catalog: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [user, setUser] = useState<{ nom: string; prenom: string } | null>(null);
   const [userBorrowings, setUserBorrowings] = useState<number[]>([]);
+  const [borrowingBookId, setBorrowingBookId] = useState<number | null>(null);
   const booksPerPage: number = 6;
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -165,7 +166,21 @@ const Catalog: React.FC = () => {
       alert("Vous devez être connecté pour emprunter un livre.");
       return;
     }
+    
+    // Vérifier si déjà emprunté côté front
+    if (userBorrowings.includes(book_id)) {
+      alert("Vous avez déjà emprunté ce livre.");
+      return;
+    }
+    
+    // Désactiver le bouton immédiatement
+    setBorrowingBookId(book_id);
+    
     try {
+      console.log('Token utilisé:', token);
+      console.log('Token type:', typeof token);
+      console.log('Token length:', token ? token.length : 'null');
+      
       const response = await fetch('http://localhost:4400/api/emprunter', {
         method: 'POST',
         headers: {
@@ -174,17 +189,40 @@ const Catalog: React.FC = () => {
         },
         body: JSON.stringify({ book_id }),
       });
-      const data = await response.json();
+      
+      // Log de la réponse pour debug
+      console.log('Status:', response.status);
+      console.log('Headers:', response.headers);
+      
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Erreur parsing JSON:', parseError);
+        console.error('Contenu reçu:', responseText);
+        alert(`Erreur serveur: Réponse non-JSON reçue (${response.status})`);
+        return;
+      }
+      
       if (response.ok) {
         alert("Livre emprunté avec succès !");
         // Rafraîchir la liste des livres et des emprunts utilisateur
         await loadBooks();
         await fetchUserBorrowings();
       } else {
+        // Afficher le message d'erreur précis du back
         alert(data.error || "Erreur lors de l'emprunt");
       }
-    } catch {
-      alert("Erreur lors de l'emprunt");
+    } catch (error: unknown) {
+      console.error('Erreur détaillée:', error);
+      console.error('Token utilisé:', token);
+      alert(`Erreur de connexion au serveur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    } finally {
+      // Réactiver le bouton
+      setBorrowingBookId(null);
     }
   };
 
@@ -352,16 +390,18 @@ const Catalog: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         className={`flex-1 px-4 py-2 rounded-full text-white font-semibold transition-all transform hover:scale-105 ${
-                          book.available_copies > 0 && !alreadyBorrowed
+                          book.available_copies > 0 && !alreadyBorrowed && borrowingBookId !== book.book_id
                             ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600'
                             : 'bg-gray-400 cursor-not-allowed'
                         }`}
-                        disabled={book.available_copies <= 0 || alreadyBorrowed}
+                        disabled={book.available_copies <= 0 || alreadyBorrowed || borrowingBookId === book.book_id}
                         onClick={() => handleBorrow(book.book_id)}
                       >
-                        {alreadyBorrowed
-                          ? 'Déjà emprunté'
-                          : (book.available_copies > 0 ? 'Emprunter' : 'Indisponible')}
+                        {borrowingBookId === book.book_id 
+                          ? 'Emprunt en cours...'
+                          : alreadyBorrowed
+                            ? 'Déjà emprunté'
+                            : (book.available_copies > 0 ? 'Emprunter' : 'Indisponible')}
                       </button>
                     </div>
                   </div>

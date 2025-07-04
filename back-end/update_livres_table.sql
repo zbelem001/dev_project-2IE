@@ -79,3 +79,5 @@ DELETE FROM utilisateurs;
 
 
      SELECT * FROM Livres ORDER BY book_id DESC LIMIT 5;
+
+      DESCRIBE Returns;

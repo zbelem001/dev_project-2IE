@@ -41,11 +41,11 @@ apiRoutes.post('/etudiants', Etudiant.addEtudiant);
 apiRoutes.put('/etudiants/:id', Etudiant.updateEtudiant);
 apiRoutes.delete('/etudiants/:id', Etudiant.deleteEtudiant);
 apiRoutes.get('/livres-populaires', Livre.getMostBorrowed[0]);
-apiRoutes.post('/emprunter', Livre.borrowBook[0]);
-apiRoutes.post('/rendre', Livre.returnBook[0]);
-apiRoutes.get('/mes-emprunts', Livre.getUserActiveBorrowings[0]);
+apiRoutes.post('/emprunter', Livre.borrowBook);
+apiRoutes.post('/rendre', Livre.returnBook);
+apiRoutes.get('/mes-emprunts', Livre.getUserActiveBorrowings);
 apiRoutes.get('/stats', Stats);
-apiRoutes.post('/prolonger', Livre.prolongBorrowing[0]);
+apiRoutes.post('/prolonger', Livre.prolongBorrowing);
 
 app.use('/api', apiRoutes);
 

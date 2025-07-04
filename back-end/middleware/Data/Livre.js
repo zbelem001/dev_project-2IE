@@ -220,6 +220,12 @@ exports.returnBook = [verifyToken, async (req, res) => {
       'UPDATE Emprunts SET date_retour = ? WHERE borrowing_id = ?',
       [new Date(), emprunts[0].borrowing_id]
     );
+
+    // Insérer dans Returns
+    await db.query(
+      'INSERT INTO Returns (user_id, book_id, borrow_date, return_date, rating_given) VALUES (?, ?, ?, ?, ?)',
+      [userId, book_id, emprunts[0].borrow_date, new Date(), null]
+    );
     
     // Incrémenter les exemplaires disponibles
     await db.query(
