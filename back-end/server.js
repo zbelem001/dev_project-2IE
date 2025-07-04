@@ -45,6 +45,7 @@ apiRoutes.post('/emprunter', Livre.borrowBook[0]);
 apiRoutes.post('/rendre', Livre.returnBook[0]);
 apiRoutes.get('/mes-emprunts', Livre.getUserActiveBorrowings[0]);
 apiRoutes.get('/stats', Stats);
+apiRoutes.post('/prolonger', Livre.prolongBorrowing[0]);
 
 app.use('/api', apiRoutes);
 

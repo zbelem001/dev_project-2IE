@@ -137,7 +137,7 @@ exports.getMostBorrowed = [verifyToken, async (req, res) => {
 exports.borrowBook = [verifyToken, async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { book_id } = req.body;
+    const { book_id, due_date } = req.body;
 
     // Vérifier si l'utilisateur a déjà un emprunt actif pour ce livre
     const [existing] = await db.query(
@@ -158,10 +158,23 @@ exports.borrowBook = [verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Aucun exemplaire disponible pour ce livre.' });
     }
 
-    // Créer l'emprunt et décrémenter les exemplaires disponibles
+    // Gestion de la date de retour personnalisée
     const now = new Date();
-    const due = new Date();
-    due.setDate(now.getDate() + 14);
+    let due;
+    if (due_date) {
+      due = new Date(due_date);
+      // Validation : la date doit être dans le futur et max 30 jours après aujourd'hui
+      const minDate = new Date(now);
+      minDate.setDate(now.getDate() + 1);
+      const maxDate = new Date(now);
+      maxDate.setDate(now.getDate() + 30);
+      if (isNaN(due.getTime()) || due < minDate || due > maxDate) {
+        return res.status(400).json({ error: "Date de retour invalide (doit être comprise entre demain et dans 30 jours)" });
+      }
+    } else {
+      due = new Date(now);
+      due.setDate(now.getDate() + 14);
+    }
     
     await db.query('START TRANSACTION');
     
@@ -236,5 +249,47 @@ exports.getUserActiveBorrowings = [verifyToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur lors de la récupération des emprunts' });
+  }
+}];
+
+// Prolonger un emprunt
+exports.prolongBorrowing = [verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { book_id, new_due_date } = req.body;
+    if (!book_id || !new_due_date) {
+      return res.status(400).json({ error: 'book_id et new_due_date sont requis' });
+    }
+    // Trouver l'emprunt actif
+    const [emprunts] = await db.query(
+      'SELECT * FROM Emprunts WHERE user_id = ? AND book_id = ? AND date_retour IS NULL',
+      [userId, book_id]
+    );
+    if (emprunts.length === 0) {
+      return res.status(400).json({ error: 'Aucun emprunt actif trouvé pour ce livre.' });
+    }
+    const emprunt = emprunts[0];
+    const currentDue = new Date(emprunt.due_date);
+    const newDue = new Date(new_due_date);
+    // Validation : la nouvelle date doit être après la date actuelle et max 30 jours après aujourd'hui
+    const now = new Date();
+    const maxDate = new Date(now);
+    maxDate.setDate(now.getDate() + 30);
+    if (isNaN(newDue.getTime()) || newDue <= currentDue || newDue > maxDate) {
+      return res.status(400).json({ error: "Nouvelle date invalide (doit être après la date actuelle et dans la limite de 30 jours)" });
+    }
+    // (Optionnel) Empêcher de prolonger plusieurs fois
+    if (emprunt.extended && emprunt.extended >= 1) {
+      return res.status(400).json({ error: "Vous avez déjà prolongé cet emprunt." });
+    }
+    // Mettre à jour la date de retour et le flag extended
+    await db.query(
+      'UPDATE Emprunts SET due_date = ?, extended = 1 WHERE borrowing_id = ?',
+      [newDue, emprunt.borrowing_id]
+    );
+    res.json({ success: true, message: 'Emprunt prolongé avec succès', new_due_date: newDue });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur lors de la prolongation de l\'emprunt' });
   }
 }];
