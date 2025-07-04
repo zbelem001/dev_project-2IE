@@ -54,10 +54,8 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const [prolongBookId, setProlongBookId] = useState<number | null>(null);
-  const [prolongDate, setProlongDate] = useState<string>("");
-  const [prolongMessage, setProlongMessage] = useState<string>("");
-  const [prolongLoading, setProlongLoading] = useState<boolean>(false);
+  const [returnLoading, setReturnLoading] = useState<boolean>(false);
+  const [returnMessage, setReturnMessage] = useState<string>("");
 
   // Fonction stable pour récupérer les données du dashboard
   const fetchDashboardData = useCallback(async () => {
@@ -151,36 +149,30 @@ const Dashboard: React.FC = () => {
     router.push('/');
   };
 
-  // Fonction pour gérer la prolongation
-  const handleProlong = async (bookId: number) => {
-    if (!prolongDate) {
-      setProlongMessage("Veuillez choisir une nouvelle date de retour.");
-      return;
-    }
-    setProlongLoading(true);
-    setProlongMessage("");
+  // Fonction pour gérer le retour d'un livre
+  const handleReturn = async (bookId: number) => {
+    setReturnLoading(true);
+    setReturnMessage("");
     try {
-      const response = await fetch("http://localhost:4400/api/prolonger", {
+      const response = await fetch("http://localhost:4400/api/rendre", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ book_id: bookId, new_due_date: prolongDate }),
+        body: JSON.stringify({ book_id: bookId }),
       });
       const data = await response.json();
       if (response.ok && data.success) {
-        setProlongMessage("Prolongation réussie !");
-        setProlongBookId(null);
-        setProlongDate("");
+        setReturnMessage("Livre rendu avec succès !");
         await fetchDashboardData();
       } else {
-        setProlongMessage(data.error || "Erreur lors de la prolongation.");
+        setReturnMessage(data.error || "Erreur lors du retour du livre.");
       }
     } catch {
-      setProlongMessage("Erreur de connexion au serveur.");
+      setReturnMessage("Erreur de connexion au serveur.");
     } finally {
-      setProlongLoading(false);
+      setReturnLoading(false);
     }
   };
 
@@ -367,53 +359,14 @@ const Dashboard: React.FC = () => {
                       </div>
                     )}
                     <button
-                      className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full hover:from-green-600 hover:to-blue-600 transition-all transform hover:scale-105 font-semibold mb-2"
-                      onClick={() => {
-                        setProlongBookId(book.id);
-                        setProlongDate("");
-                        setProlongMessage("");
-                      }}
-                      disabled={prolongLoading}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 font-semibold mb-2"
+                      onClick={() => handleReturn(book.id)}
+                      disabled={returnLoading}
                     >
-                      Prolonger
+                      Rendre
                     </button>
-                    {/* Afficher le calendrier si ce livre est sélectionné */}
-                    {prolongBookId === book.id && (
-                      <div className="mt-2 flex flex-col items-center">
-                        <input
-                          type="date"
-                          className="border rounded px-2 py-1 mb-2 text-black"
-                          style={{ color: 'black' }}
-                          min={(() => {
-                            const ref = book.dueDate ? new Date(book.dueDate) : new Date();
-                            ref.setDate(ref.getDate() + 1);
-                            return ref.toISOString().split('T')[0];
-                          })()}
-                          max={(() => {
-                            const ref = new Date();
-                            ref.setDate(ref.getDate() + 30);
-                            return ref.toISOString().split('T')[0];
-                          })()}
-                          value={prolongDate}
-                          onChange={e => setProlongDate(e.target.value)}
-                        />
-                        <button
-                          className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 mb-1"
-                          onClick={() => handleProlong(book.id)}
-                          disabled={prolongLoading || !prolongDate}
-                        >
-                          Valider la prolongation
-                        </button>
-                        <button
-                          className="px-2 py-1 text-sm text-gray-500 hover:text-red-500"
-                          onClick={() => { setProlongBookId(null); setProlongDate(""); setProlongMessage(""); }}
-                        >
-                          Annuler
-                        </button>
-                        {prolongMessage && (
-                          <div className="mt-1 text-sm text-center text-red-600">{prolongMessage}</div>
-                        )}
-                      </div>
+                    {returnMessage && (
+                      <div className="mt-1 text-sm text-center text-red-600">{returnMessage}</div>
                     )}
                   </div>
                 ))}
