@@ -3,7 +3,7 @@ const db = require('../../database');
 // Lister tous les étudiants
 exports.getAllEtudiants = async (req, res) => {
   try {
-    const [results] = await db.query('SELECT id, nom, prenom, email, telephone, date_creation, useractive FROM utilisateurs');
+    const [results] = await db.query('SELECT id, nom, prenom, email, telephone, date_creation, useractive, role FROM utilisateurs');
     res.json(results);
   } catch (err) {
     console.error(err);

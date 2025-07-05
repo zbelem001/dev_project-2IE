@@ -15,10 +15,10 @@ import {
   Users,
   BookOpen,
   CheckCircle,
-  AlertTriangle,
   Plus,
   Edit,
   Trash,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 
@@ -42,6 +42,17 @@ interface Stats {
   totalLoans: number;
   totalReturns: number;
   overdueLoans: number;
+}
+
+// Interface pour les étudiants
+interface Etudiant {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  date_creation: string;
+  useractive: number;
 }
 
 const Catalog: React.FC = () => {
@@ -76,6 +87,9 @@ const Catalog: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const booksPerPage: number = 6;
+  const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
+  const [loadingEtudiants, setLoadingEtudiants] = useState<boolean>(false);
+  const [errorEtudiants, setErrorEtudiants] = useState<string>("");
 
   // Catégories pour le filtrage
   const categories: string[] = [
@@ -141,6 +155,27 @@ const Catalog: React.FC = () => {
     };
     loadData();
   }, []);
+
+  // Charger la liste des étudiants
+  const fetchEtudiants = async () => {
+    setLoadingEtudiants(true);
+    setErrorEtudiants("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:4400/api/etudiants", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Erreur lors du chargement des étudiants");
+      const data = await res.json();
+      // Filtrer pour exclure les admins
+      const etudiantsFiltres = data.filter((etudiant: any) => etudiant.role !== 'admin');
+      setEtudiants(etudiantsFiltres);
+    } catch (e: any) {
+      setErrorEtudiants(e.message || "Erreur inconnue");
+    } finally {
+      setLoadingEtudiants(false);
+    }
+  };
 
   // Fermer le menu de profil en cas de clic à l'extérieur
   useEffect(() => {
@@ -327,14 +362,33 @@ const Catalog: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Supprimer un étudiant
+  const handleDeleteEtudiant = async (id: number) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer cet étudiant ?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:4400/api/etudiants/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Erreur lors de la suppression");
+      setEtudiants((prev) => prev.filter((e) => e.id !== id));
+    } catch (e) {
+      alert("Erreur lors de la suppression");
+    }
+  };
+
+  // Charger les étudiants au montage
+  useEffect(() => { fetchEtudiants(); }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <header className="bg-white shadow-xl sticky top-0 z-50 border-b-4 border-red-500">
+      <header className="bg-white shadow-xl sticky top-0 z-50 border-b-4 border-red-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-yellow-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-yellow-400 rounded-lg flex items-center justify-center">
                 <Book className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -343,10 +397,10 @@ const Catalog: React.FC = () => {
               </div>
             </div>
             <nav className="hidden md:flex space-x-8 items-center">
-              <Link
-                href="/admin"
-                className="text-gray-700 hover:text-red-500 transition-colors font-medium border-b-2 border-red-500 pb-1"
-              >
+                              <Link
+                  href="/admin"
+                  className="text-gray-700 hover:text-red-400 transition-colors font-medium border-b-2 border-red-400 pb-1"
+                >
                 Tableau de bord
               </Link>
               <div className="relative" ref={profileMenuRef}>
@@ -354,7 +408,7 @@ const Catalog: React.FC = () => {
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
-                  <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-red-400 rounded-full flex items-center justify-center">
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <span className="text-gray-700 font-medium hidden lg:inline">Admin</span>
@@ -371,7 +425,7 @@ const Catalog: React.FC = () => {
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100 font-medium"
+                        className="block w-full text-left px-4 py-2 text-red-400 hover:bg-gray-100 font-medium"
                       >
                         Déconnexion
                       </button>
@@ -384,31 +438,31 @@ const Catalog: React.FC = () => {
               className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="w-6 h-6 text-red-500" /> : <Menu className="w-6 h-6 text-red-500" />}
+              {isMenuOpen ? <X className="w-6 h-6 text-red-400" /> : <Menu className="w-6 h-6 text-red-400" />}
             </button>
           </div>
         </div>
         {isMenuOpen && (
           <div className="md:hidden bg-white border-t shadow-lg">
             <div className="px-4 py-4 space-y-3">
-              <Link href="/dashbord" className="block py-2 text-gray-700 hover:text-red-500 font-medium">
+              <Link href="/dashbord" className="block py-2 text-gray-700 hover:text-red-400 font-medium">
                 Tableau de bord
               </Link>
-              <Link href="/catalogue" className="block py-2 text-gray-700 hover:text-green-500 font-medium">
+              <Link href="/catalogue" className="block py-2 text-gray-700 hover:text-green-400 font-medium">
                 Catalogue
               </Link>
-              <Link href="/profil" className="block py-2 text-gray-700 hover:text-blue-500 font-medium">
+              <Link href="/profil" className="block py-2 text-gray-700 hover:text-blue-400 font-medium">
                 Profil
               </Link>
-              <Link href="/catalogue" className="block py-2 text-gray-700 hover:text-green-500 font-medium">
+              <Link href="/catalogue" className="block py-2 text-gray-700 hover:text-green-400 font-medium">
                 Emprunt
               </Link>
-              <Link href="/returns" className="block py-2 text-gray-700 hover:text-blue-500 font-medium">
+              <Link href="/returns" className="block py-2 text-gray-700 hover:text-blue-400 font-medium">
                 Retour
               </Link>
               <button
                 onClick={handleLogout}
-                className="block w-full text-left py-2 text-red-500 font-medium"
+                className="block w-full text-left py-2 text-red-400 font-medium"
               >
                 Déconnexion
               </button>
@@ -423,8 +477,8 @@ const Catalog: React.FC = () => {
         <section className="mb-12">
           <div className="bg-white rounded-2xl p-8 shadow-xl">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">Tableau de Bord Admin</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <div className="bg-gradient-to-r from-red-500 to-yellow-500 text-white rounded-lg p-6 shadow-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gradient-to-r from-red-400 to-yellow-400 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <Book className="w-10 h-10" />
                   <div>
@@ -433,7 +487,7 @@ const Catalog: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-green-400 to-blue-400 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <Users className="w-10 h-10" />
                   <div>
@@ -442,7 +496,7 @@ const Catalog: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <BookOpen className="w-10 h-10" />
                   <div>
@@ -451,21 +505,12 @@ const Catalog: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-6 shadow-lg">
+              <div className="bg-gradient-to-r from-red-400 to-orange-400 text-white rounded-lg p-6 shadow-lg">
                 <div className="flex items-center space-x-4">
                   <CheckCircle className="w-10 h-10" />
                   <div>
                     <p className="text-lg font-semibold">Retours</p>
                     <p className="text-3xl font-bold">{stats.totalReturns}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg p-6 shadow-lg">
-                <div className="flex items-center space-x-4">
-                  <AlertTriangle className="w-10 h-10" />
-                  <div>
-                    <p className="text-lg font-semibold">Emprunts en retard</p>
-                    <p className="text-3xl font-bold">{stats.overdueLoans}</p>
                   </div>
                 </div>
               </div>
@@ -480,7 +525,7 @@ const Catalog: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900">Gestion des Livres</h2>
               <button
                 onClick={() => setIsBookModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-yellow-500 text-white rounded-full hover:from-red-600 hover:to-yellow-600 transition-all transform hover:scale-105 font-semibold shadow-lg"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-400 to-yellow-400 text-white rounded-full hover:from-red-500 hover:to-yellow-500 transition-all transform hover:scale-105 font-semibold shadow-lg"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Ajouter un Livre
@@ -494,7 +539,7 @@ const Catalog: React.FC = () => {
                   placeholder="Rechercher par titre, auteur ou genre..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
+                  className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400 shadow-sm"
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -502,7 +547,7 @@ const Catalog: React.FC = () => {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
+                  className="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400 shadow-sm"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -517,7 +562,7 @@ const Catalog: React.FC = () => {
                 <p className="text-gray-600 text-lg">Aucun livre trouvé.</p>
                 <Link
                   href="/catalogue"
-                  className="mt-4 inline-flex items-center text-red-500 hover:text-red-600 font-semibold"
+                  className="mt-4 inline-flex items-center text-red-400 hover:text-red-500 font-semibold"
                 >
                   Réinitialiser les filtres
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -547,14 +592,14 @@ const Catalog: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openEditBook(book)}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all transform hover:scale-105 font-semibold"
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-400 to-indigo-400 text-white rounded-full hover:from-blue-500 hover:to-indigo-500 transition-all transform hover:scale-105 font-semibold"
                       >
                         <Edit className="w-4 h-4 mr-2 inline" />
                         Modifier
                       </button>
                       <button
                         onClick={() => deleteBook(book.book_id)}
-                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 font-semibold"
+                        className="px-4 py-2 bg-gradient-to-r from-red-400 to-orange-400 text-white rounded-full hover:from-red-500 hover:to-orange-500 transition-all transform hover:scale-105 font-semibold"
                       >
                         <Trash className="w-4 h-4" />
                       </button>
@@ -587,7 +632,7 @@ const Catalog: React.FC = () => {
                   onClick={() => handlePageChange(index + 1)}
                   className={`px-4 py-2 rounded-full font-medium ${
                     currentPage === index + 1
-                      ? "bg-red-500 text-white"
+                      ? "bg-red-400 text-white"
                       : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
                   }`}
                 >
@@ -597,6 +642,55 @@ const Catalog: React.FC = () => {
             </nav>
           </section>
         )}
+
+        {/* Section Liste des étudiants */}
+        <section className="mb-12">
+          <div className="bg-white rounded-2xl p-8 shadow-xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Liste des étudiants</h2>
+            {loadingEtudiants ? (
+              <p className="text-gray-500">Chargement...</p>
+            ) : errorEtudiants ? (
+              <p className="text-red-500">{errorEtudiants}</p>
+            ) : etudiants.length === 0 ? (
+              <p className="text-gray-500">Aucun étudiant trouvé.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Prénom</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Téléphone</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date création</th>
+                      <th className="px-4 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                                         {etudiants.map((e) => (
+                       <tr key={e.id}>
+                         <td className="px-4 py-2 whitespace-nowrap text-black">{e.nom}</td>
+                         <td className="px-4 py-2 whitespace-nowrap text-black">{e.prenom}</td>
+                         <td className="px-4 py-2 whitespace-nowrap text-black">{e.email}</td>
+                         <td className="px-4 py-2 whitespace-nowrap text-black">{e.telephone}</td>
+                         <td className="px-4 py-2 whitespace-nowrap text-black">{new Date(e.date_creation).toLocaleDateString()}</td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={() => handleDeleteEtudiant(e.id)}
+                            className="text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
 
       {/* Modal pour ajouter/modifier un livre */}
@@ -618,7 +712,7 @@ const Catalog: React.FC = () => {
                   type="text"
                   value={bookForm.title || ""}
                   onChange={(e) => setBookForm({ ...bookForm, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                 />
                 {formErrors.title && <p className="text-sm text-red-500">{formErrors.title}</p>}
               </div>
@@ -628,7 +722,7 @@ const Catalog: React.FC = () => {
                   type="text"
                   value={bookForm.author || ""}
                   onChange={(e) => setBookForm({ ...bookForm, author: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                 />
                 {formErrors.author && <p className="text-sm text-red-500">{formErrors.author}</p>}
               </div>
@@ -638,7 +732,7 @@ const Catalog: React.FC = () => {
                   type="text"
                   value={bookForm.category || ""}
                   onChange={(e) => setBookForm({ ...bookForm, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                 />
                 {formErrors.category && <p className="text-sm text-red-500">{formErrors.category}</p>}
               </div>
@@ -651,7 +745,7 @@ const Catalog: React.FC = () => {
                   max="5"
                   value={bookForm.rating || 0}
                   onChange={(e) => setBookForm({ ...bookForm, rating: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                 />
                 {formErrors.rating && <p className="text-sm text-red-500">{formErrors.rating}</p>}
               </div>
@@ -710,7 +804,7 @@ const Catalog: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full hover:from-green-600 hover:to-blue-600 flex items-center"
+                  className="px-4 py-2 bg-gradient-to-r from-green-400 to-blue-400 text-white rounded-full hover:from-green-500 hover:to-blue-500 flex items-center"
                 >
                   <Save className="w-5 h-5 mr-2" />
                   {editingBook ? "Modifier" : "Ajouter"}
