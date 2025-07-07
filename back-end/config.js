@@ -1,5 +1,5 @@
-module.exports={
+module.exports = {
 	
-	secret:'#Mon#Mot#Secret#De##JWT#',
+	secret: process.env.JWT_SECRET || '#Mon#Mot#Secret#De##JWT#',
 	
 };  

@@ -1,0 +1,47 @@
+CREATE TABLE IF NOT EXISTS utilisateurs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nom VARCHAR(100),
+  prenom VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  password VARCHAR(255),
+  telephone VARCHAR(20),
+  date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+  useractive TINYINT DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS acces_token (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  token VARCHAR(255),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES utilisateurs(id)
+);
+
+CREATE TABLE IF NOT EXISTS Livres (
+  book_id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255),
+  author VARCHAR(255),
+  category VARCHAR(100),
+  rating FLOAT,
+  cover VARCHAR(255),
+  total_copies INT DEFAULT 1,
+  available_copies INT DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Emprunts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  book_id INT,
+  date_emprunt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  date_retour DATETIME,
+  FOREIGN KEY (user_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (book_id) REFERENCES Livres(book_id)
+);
+
+CREATE TABLE IF NOT EXISTS Returns (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  emprunt_id INT,
+  date_return DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (emprunt_id) REFERENCES Emprunts(id)
+); 
